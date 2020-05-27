@@ -1,2 +1,55 @@
-# CSGO-Super-Smash-Bros-CSGOWeapons
-Super Smash Bros Item - CSGO Weapons
+# CSGO Super Smash Bros Items: CSGO Weapons
+Add CSGO weapons for [Super Smash Bros mode](https://github.com/rogeraabbccdd/CSGO-Super-Smash-Bros)
+
+## Available Items
+- weapon_ak47
+- weapon_aug
+- weapon_awp
+- weapon_axe
+- weapon_bizon
+- weapon_breachcharge
+- weapon_cz75a
+- weapon_deagle
+- weapon_decoy
+- weapon_elite
+- weapon_famas
+- weapon_fists
+- weapon_fiveseven
+- weapon_flashbang
+- weapon_g3sg1
+- weapon_galilar
+- weapon_glock
+- weapon_hammer
+- weapon_healthshot
+- weapon_hegrenade
+- weapon_hkp2000
+- weapon_incgrenade
+- weapon_knife
+- weapon_knifegg
+- weapon_m249
+- weapon_m4a1
+- weapon_m4a1_silencer
+- weapon_mac10
+- weapon_mag7
+- weapon_molotov
+- weapon_mp5sd
+- weapon_mp7
+- weapon_mp9
+- weapon_negev
+- weapon_nova
+- weapon_p250
+- weapon_p90
+- weapon_revolver
+- weapon_sawedoff
+- weapon_scar20
+- weapon_sg556
+- weapon_shield
+- weapon_smokegrenade
+- weapon_spanner
+- weapon_ssg08
+- weapon_tagrenade
+- weapon_taser
+- weapon_tec9
+- weapon_ump45
+- weapon_usp_silencer
+- weapon_xm1014
