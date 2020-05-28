@@ -1,27 +1,49 @@
 #include <sourcemod>
 #include <sdktools>
-#include <sdkhooks>
-#include <cstrike>
 #include <kento_smashbros>
 
+#pragma newdecls required
+
 bool bLibraryExists = false;
+
+ConVar healthshot_health;
+float fhealthshot_health;
+
+int healthshot[MAXPLAYERS + 1];
 
 public Plugin myinfo =
 {
   name = "[CS:GO] Super Smash Bros Item - CSGO Weapons",
   author = "Kento",
   description = "Super Smash Bros Item - CSGO Weapons",
-  version = "1.0",
+  version = "1.1",
   url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
 
 public void OnPluginStart()
 {
-  HookEvent("weapon_fire", Event_WeaponFire);
   bLibraryExists = LibraryExists("kento_smashbros");
+
+  HookEvent("weapon_fire", Event_WeaponFire);
+
+  healthshot_health = CreateConVar("sb_healthshot_heal", "50.0", "How many damage will healthshot heal? FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
+  healthshot_health.AddChangeHook(OnConVarChanged);
 }
 
-public void OnLibraryAdded(const String:name[])
+public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+  if (convar == healthshot_health) 
+  {
+    fhealthshot_health = healthshot_health.FloatValue;
+  }
+}
+
+public void OnConfigsExecuted()
+{
+  fhealthshot_health = healthshot_health.FloatValue;
+}
+
+public void OnLibraryAdded(const char [] name)
 {
   if (StrEqual(name, "kento_smashbros"))
   {
@@ -29,7 +51,7 @@ public void OnLibraryAdded(const String:name[])
   }
 }
 
-public void OnLibraryRemoved(const String:name[])
+public void OnLibraryRemoved(const char [] name)
 {
   if (StrEqual(name, "kento_smashbros"))
   {
@@ -37,13 +59,43 @@ public void OnLibraryRemoved(const String:name[])
   }
 }
 
-public Action Event_WeaponFire (Event event, const char[] name, bool dontBroadcast) {
+public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
+{
   int client = GetClientOfUserId(event.GetInt("userid"));
+
   char weapon[32];
   event.GetString("weapon", weapon, sizeof(weapon));
-  if(StrEqual(weapon, "weapon_healthshot", false) || StrEqual(weapon, "healthshot", false))
-  {
-    SB_SetClientDamage(client, SB_GetClientDamage(client) - 50.0);
+  
+  if(StrContains(weapon, "healthshot") != -1) {
+    int entity =  GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
+    healthshot[client] = entity;
+  }
+}
+
+public void OnEntityDestroyed(int entity)
+{
+  char name[32];
+  GetEdictClassname(entity, name, sizeof(name));
+
+  if(StrContains(name, "healthshot") != -1) {
+    int owner = -1;
+    for (int i = 1; i <= MaxClients; i++)
+    {
+      if(entity == healthshot[i]) {
+        owner = i;
+        break;
+      }
+    }
+    if(owner > -1 && IsValidClient(owner))  Heal(owner);
+  }
+}
+
+void Heal (int client) {
+  if(IsValidClient(client)) {
+    healthshot[client] = -1;
+    float clientDMG = SB_GetClientDamage(client);
+    clientDMG -= fhealthshot_health;
+    SB_SetClientDamage(client, clientDMG);
   }
 }
 
@@ -362,4 +414,12 @@ public Action SB_OnItemSpawn (const char[] name, float pos[3])
     DispatchSpawn(entity);
     TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
   }
+}
+
+stock bool IsValidClient(int client)
+{
+  if (client <= 0) return false;
+  if (client > MaxClients) return false;
+  if (!IsClientConnected(client)) return false;
+  return IsClientInGame(client);
 }
