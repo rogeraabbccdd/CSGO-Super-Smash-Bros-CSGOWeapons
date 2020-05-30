@@ -1,6 +1,13 @@
 # CSGO Super Smash Bros Items: CSGO Weapons
 Add CSGO weapons for [Super Smash Bros mode](https://github.com/rogeraabbccdd/CSGO-Super-Smash-Bros)
 
+## Cvars
+- `sb_healthshot_heal` - How many damage will healthshot heal? FLOAT VALUE ONLY. Default: 50.0
+- `sb_heavyassaultsuit_def` - Player take damage multiplier to set when player pick up heavyassaultsuit. FLOAT VALUE ONLY. Default: 0.5
+- `sb_heavyassaultsuit_up` - Player upward force multiplier to set when has heavyassaultsuit. FLOAT VALUE ONLY. Default: 0.5
+- `sb_heavyassaultsuit_armor` - How many damage can heavyassaultsuit take before break? FLOAT VALUE ONLY. Default: 0.5
+- `sb_heavyassaultsuit_back` - Player pushback multiplier to set when has heavyassaultsuit FLOAT VALUE ONLY. Default: 0.5
+
 ## Available Items
 - weapon_ak47
 - weapon_aug
@@ -53,3 +60,8 @@ Add CSGO weapons for [Super Smash Bros mode](https://github.com/rogeraabbccdd/CS
 - weapon_ump45
 - weapon_usp_silencer
 - weapon_xm1014
+- weapon_bumpmine
+- item_exosuit
+- item_parachute
+- item_heavyassaultsuit
+- dronegun
