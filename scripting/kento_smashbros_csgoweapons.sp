@@ -55,7 +55,7 @@ public void OnPluginStart()
   heavyassaultsuit_up = CreateConVar("sb_heavyassaultsuit_up", "0.5", "Player upward force multiplier to set when has heavyassaultsuit. FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
   heavyassaultsuit_up.AddChangeHook(OnConVarChanged);
 
-  heavyassaultsuit_armor = CreateConVar("sb_heavyassaultsuit_armor", "100.0", "How many damage can heavyassaultsuit take after break? FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
+  heavyassaultsuit_armor = CreateConVar("sb_heavyassaultsuit_armor", "100.0", "How many damage can heavyassaultsuit take before break? FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
   heavyassaultsuit_armor.AddChangeHook(OnConVarChanged);
 
   heavyassaultsuit_back = CreateConVar("sb_heavyassaultsuit_back", "0.5", "Player pushback multiplier to set when has heavyassaultsuit FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
