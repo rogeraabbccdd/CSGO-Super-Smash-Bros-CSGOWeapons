@@ -16,7 +16,7 @@ public Plugin myinfo =
   name = "[CS:GO] Super Smash Bros Item - CSGO Weapons",
   author = "Kento",
   description = "Super Smash Bros Item - CSGO Weapons",
-  version = "1.1",
+  version = "1.2",
   url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
 
@@ -28,6 +28,14 @@ public void OnPluginStart()
 
   healthshot_health = CreateConVar("sb_healthshot_heal", "50.0", "How many damage will healthshot heal? FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
   healthshot_health.AddChangeHook(OnConVarChanged);
+
+  AutoExecConfig(true, "kento_smashbros_csgoweapons");
+}
+
+public void OnMapStart()
+{
+  PrecacheModel("models/props_survival/upgrades/exojump.mdl", true);
+  PrecacheModel("models/props_survival/upgrades/parachutepack.mdl", true);
 }
 
 public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -74,19 +82,21 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
 
 public void OnEntityDestroyed(int entity)
 {
-  char name[32];
-  GetEdictClassname(entity, name, sizeof(name));
+  if(IsValidEdict(entity)) {
+    char name[32];
+    GetEdictClassname(entity, name, sizeof(name));
 
-  if(StrContains(name, "healthshot") != -1) {
-    int owner = -1;
-    for (int i = 1; i <= MaxClients; i++)
-    {
-      if(entity == healthshot[i]) {
-        owner = i;
-        break;
+    if(StrContains(name, "healthshot") != -1) {
+      int owner = -1;
+      for (int i = 1; i <= MaxClients; i++)
+      {
+        if(entity == healthshot[i]) {
+          owner = i;
+          break;
+        }
       }
+      if(owner > -1 && IsValidClient(owner))  Heal(owner);
     }
-    if(owner > -1 && IsValidClient(owner))  Heal(owner);
   }
 }
 
@@ -411,6 +421,24 @@ public Action SB_OnItemSpawn (const char[] name, float pos[3])
 
   else if(StrEqual(name, "weapon_xm1014")) {
     entity = CreateEntityByName("weapon_xm1014");
+    DispatchSpawn(entity);
+    TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+  }
+
+  else if(StrEqual(name, "weapon_bumpmine")) {
+    entity = CreateEntityByName("weapon_bumpmine");
+    DispatchSpawn(entity);
+    TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+  }
+
+  else if(StrEqual(name, "item_exosuit")) {
+    entity = CreateEntityByName("prop_weapon_upgrade_exojump");
+    DispatchSpawn(entity);
+    TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+  }
+
+  else if(StrEqual(name, "item_parachute")) {
+    entity = CreateEntityByName("prop_weapon_upgrade_chute");
     DispatchSpawn(entity);
     TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
   }
