@@ -1,5 +1,7 @@
 #include <sourcemod>
 #include <sdktools>
+#include <cstrike>
+#include <smlib>
 #include <kento_smashbros>
 
 #pragma newdecls required
@@ -7,16 +9,31 @@
 bool bLibraryExists = false;
 
 ConVar healthshot_health;
+ConVar heavyassaultsuit_def;
+ConVar heavyassaultsuit_armor;
+ConVar heavyassaultsuit_up;
+ConVar heavyassaultsuit_back;
 float fhealthshot_health;
+float fheavyassaultsuit_def;
+float fheavyassaultsuit_up;
+float fheavyassaultsuit_back;
 
 int healthshot[MAXPLAYERS + 1];
+bool has_heavyassaultsuit[MAXPLAYERS + 1];
+float fheavyassaultsuit_armor[MAXPLAYERS + 1];
+float fcvar_heavyassaultsuit_armor;
+char player_default_model[256][MAXPLAYERS + 1];
+
+float playerDefaultUp[MAXPLAYERS + 1];
+float playerDefaultTake[MAXPLAYERS + 1];
+float playerDefaultBack[MAXPLAYERS + 1];
 
 public Plugin myinfo =
 {
   name = "[CS:GO] Super Smash Bros Item - CSGO Weapons",
   author = "Kento",
   description = "Super Smash Bros Item - CSGO Weapons",
-  version = "1.2",
+  version = "1.3",
   url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
 
@@ -25,9 +42,24 @@ public void OnPluginStart()
   bLibraryExists = LibraryExists("kento_smashbros");
 
   HookEvent("weapon_fire", Event_WeaponFire);
+  HookEvent("dz_item_interaction", Event_DzItem);
+  HookEvent("round_start", Event_RoundStart);
+  HookEvent("player_death", Event_PlayerDeath);
 
   healthshot_health = CreateConVar("sb_healthshot_heal", "50.0", "How many damage will healthshot heal? FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
   healthshot_health.AddChangeHook(OnConVarChanged);
+
+  heavyassaultsuit_def = CreateConVar("sb_heavyassaultsuit_def", "0.5", "Player take damage multiplier to set when player pick up heavyassaultsuit. FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
+  heavyassaultsuit_def.AddChangeHook(OnConVarChanged);
+
+  heavyassaultsuit_up = CreateConVar("sb_heavyassaultsuit_up", "0.5", "Player upward force multiplier to set when has heavyassaultsuit. FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
+  heavyassaultsuit_up.AddChangeHook(OnConVarChanged);
+
+  heavyassaultsuit_armor = CreateConVar("sb_heavyassaultsuit_armor", "100.0", "How many damage can heavyassaultsuit take after break? FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
+  heavyassaultsuit_armor.AddChangeHook(OnConVarChanged);
+
+  heavyassaultsuit_back = CreateConVar("sb_heavyassaultsuit_back", "0.5", "Player pushback multiplier to set when has heavyassaultsuit FLOAT VALUE ONLY", FCVAR_NOTIFY, true, 0.0 );
+  heavyassaultsuit_back.AddChangeHook(OnConVarChanged);
 
   AutoExecConfig(true, "kento_smashbros_csgoweapons");
 }
@@ -36,6 +68,9 @@ public void OnMapStart()
 {
   PrecacheModel("models/props_survival/upgrades/exojump.mdl", true);
   PrecacheModel("models/props_survival/upgrades/parachutepack.mdl", true);
+
+  PrecacheModel("models/player/custom_player/legacy/tm_phoenix_heavy.mdl", true);
+  PrecacheModel("models/player/custom_player/legacy/ctm_heavy.mdl", true);
 }
 
 public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -44,11 +79,31 @@ public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] n
   {
     fhealthshot_health = healthshot_health.FloatValue;
   }
+  else if (convar == heavyassaultsuit_def) 
+  {
+    fheavyassaultsuit_def = heavyassaultsuit_def.FloatValue;
+  }
+  else if (convar == heavyassaultsuit_armor) 
+  {
+    fcvar_heavyassaultsuit_armor = heavyassaultsuit_armor.FloatValue;
+  }
+  else if (convar == heavyassaultsuit_up) 
+  {
+    fheavyassaultsuit_up = heavyassaultsuit_up.FloatValue;
+  }
+  else if (convar == heavyassaultsuit_back) 
+  {
+    fheavyassaultsuit_back = heavyassaultsuit_back.FloatValue;
+  }
 }
 
 public void OnConfigsExecuted()
 {
   fhealthshot_health = healthshot_health.FloatValue;
+  fheavyassaultsuit_def = heavyassaultsuit_def.FloatValue;
+  fcvar_heavyassaultsuit_armor = heavyassaultsuit_armor.FloatValue;
+  fheavyassaultsuit_up = heavyassaultsuit_up.FloatValue;
+  fheavyassaultsuit_back = heavyassaultsuit_back.FloatValue;
 }
 
 public void OnLibraryAdded(const char [] name)
@@ -71,12 +126,85 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
 {
   int client = GetClientOfUserId(event.GetInt("userid"));
 
-  char weapon[32];
-  event.GetString("weapon", weapon, sizeof(weapon));
-  
-  if(StrContains(weapon, "healthshot") != -1) {
-    int entity =  GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
-    healthshot[client] = entity;
+  if(IsValidClient(client))
+  {
+    char weapon[32];
+    event.GetString("weapon", weapon, sizeof(weapon));
+    
+    if(StrContains(weapon, "healthshot") != -1) {
+      int entity =  GetEntPropEnt(client, Prop_Data, "m_hActiveWeapon");
+      healthshot[client] = entity;
+    }
+  }
+}
+
+public Action Event_DzItem(Event event, const char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(event.GetInt("userid"));
+  int subject = event.GetInt("subject");
+  char entname[64];
+  GetEntityClassname(subject, entname, sizeof(entname));
+
+  if(IsValidClient(client))
+  {
+    if(StrContains(entname, "heavyarmor") != -1)
+    {
+      playerDefaultTake[client] = SB_GetClientTakeDamageMultiplier(client);
+      SB_SetClientTakeDamageMultiplier(client, fheavyassaultsuit_def);
+
+      playerDefaultUp[client] = SB_GetClientUpwardForce(client);
+      SB_SetClientUpwardForce(client, playerDefaultUp[client] * fheavyassaultsuit_up);
+
+      playerDefaultBack[client] = SB_GetClientPushbackMultiplier(client);
+      SB_SetClientPushbackMultiplier(client, playerDefaultBack[client] * fheavyassaultsuit_back);
+
+      has_heavyassaultsuit[client] = true;
+      fheavyassaultsuit_armor[client] = fcvar_heavyassaultsuit_armor;
+
+      char modelname[256];
+      GetEntPropString(client, Prop_Data, "m_ModelName", modelname, sizeof(modelname));
+      strcopy(player_default_model[client], sizeof(player_default_model[]), modelname);
+
+      if(GetClientTeam(client) == CS_TEAM_T)
+      {
+        SetEntityModel(client, "models/player/custom_player/legacy/tm_phoenix_heavy.mdl");
+      }
+      else if(GetClientTeam(client) == CS_TEAM_CT){
+        SetEntityModel(client, "models/player/custom_player/legacy/ctm_heavy.mdl");
+      }
+    }
+  }
+}
+
+public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
+{
+  int client = GetClientOfUserId(event.GetInt("userid"));
+  if(IsValidClient(client))
+  {
+    Format(player_default_model[client], sizeof(player_default_model[]), "");
+    has_heavyassaultsuit[client] = false;
+    fheavyassaultsuit_armor[client] = 0.0;
+    SetEntProp(client, Prop_Send, "m_bHasHelmet", false);
+    SetEntProp(client, Prop_Send, "m_bHasHeavyArmor", false);
+    SetEntProp(client, Prop_Send, "m_bWearingSuit", false);
+    SetEntProp(client, Prop_Data, "m_ArmorValue", 100);
+  }
+}
+
+public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
+{
+  for (int i = 1; i <= MaxClients; i++)
+  {
+    if(IsValidClient(i))
+    {
+      Format(player_default_model[i], sizeof(player_default_model[]), "");
+      has_heavyassaultsuit[i] = false;
+      fheavyassaultsuit_armor[i] = 0.0;
+      SetEntProp(i, Prop_Send, "m_bHasHelmet", false);
+      SetEntProp(i, Prop_Send, "m_bHasHeavyArmor", false);
+      SetEntProp(i, Prop_Send, "m_bWearingSuit", false);
+      SetEntProp(i, Prop_Data, "m_ArmorValue", 100);
+    }
   }
 }
 
@@ -106,6 +234,28 @@ void Heal (int client) {
     float clientDMG = SB_GetClientDamage(client);
     clientDMG -= fhealthshot_health;
     SB_SetClientDamage(client, clientDMG);
+  }
+}
+
+public Action SB_OnTakeDamage (int victim, int attacker, int inflictor, float damage)
+{
+  if(IsValidClient(victim) && has_heavyassaultsuit[victim])
+  {
+    fheavyassaultsuit_armor[victim] -= damage;
+    
+    if(fheavyassaultsuit_armor[victim] <= 0.0)
+    {
+      has_heavyassaultsuit[victim] = false;
+      SetEntityModel(victim, player_default_model[victim]);
+      SetEntProp(victim, Prop_Send, "m_bHasHelmet", false);
+      SetEntProp(victim, Prop_Send, "m_bHasHeavyArmor", false);
+      SetEntProp(victim, Prop_Send, "m_bWearingSuit", false);
+      SetEntProp(victim, Prop_Data, "m_ArmorValue", 100);
+
+      SB_SetClientTakeDamageMultiplier(victim, playerDefaultTake[victim]);
+      SB_SetClientUpwardForce(victim, playerDefaultUp[victim]);
+      SB_SetClientPushbackMultiplier(victim, playerDefaultBack[victim]);
+    }
   }
 }
 
@@ -439,6 +589,18 @@ public Action SB_OnItemSpawn (const char[] name, float pos[3])
 
   else if(StrEqual(name, "item_parachute")) {
     entity = CreateEntityByName("prop_weapon_upgrade_chute");
+    DispatchSpawn(entity);
+    TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+  }
+
+  else if(StrEqual(name, "item_heavyassaultsuit")) {
+    entity = CreateEntityByName("prop_weapon_refill_heavyarmor");
+    DispatchSpawn(entity);
+    TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
+  }
+
+  else if(StrEqual(name, "dronegun")) {
+    entity = CreateEntityByName("dronegun");
     DispatchSpawn(entity);
     TeleportEntity(entity, pos, NULL_VECTOR, NULL_VECTOR);
   }
