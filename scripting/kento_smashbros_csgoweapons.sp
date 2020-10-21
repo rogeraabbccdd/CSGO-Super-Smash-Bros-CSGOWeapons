@@ -33,7 +33,7 @@ public Plugin myinfo =
   name = "[CS:GO] Super Smash Bros Item - CSGO Weapons",
   author = "Kento",
   description = "Super Smash Bros Item - CSGO Weapons",
-  version = "1.3",
+  version = "1.4",
   url = "http://steamcommunity.com/id/kentomatoryoshika/"
 };
 
