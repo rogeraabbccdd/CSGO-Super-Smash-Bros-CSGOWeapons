@@ -114,6 +114,11 @@ public void OnLibraryAdded(const char [] name)
   }
 }
 
+public void OnAllPluginsLoaded()
+{
+  bLibraryExists = LibraryExists("kento_smashbros");
+}
+
 public void OnLibraryRemoved(const char [] name)
 {
   if (StrEqual(name, "kento_smashbros"))
@@ -124,6 +129,8 @@ public void OnLibraryRemoved(const char [] name)
 
 public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcast)
 {
+  if(!bLibraryExists) return;
+
   int client = GetClientOfUserId(event.GetInt("userid"));
 
   if(IsValidClient(client))
@@ -140,6 +147,8 @@ public Action Event_WeaponFire(Event event, const char[] name, bool dontBroadcas
 
 public Action Event_DzItem(Event event, const char[] name, bool dontBroadcast)
 {
+  if(!bLibraryExists) return;
+
   int client = GetClientOfUserId(event.GetInt("userid"));
   int subject = event.GetInt("subject");
   char entname[64];
@@ -178,6 +187,8 @@ public Action Event_DzItem(Event event, const char[] name, bool dontBroadcast)
 
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
+  if(!bLibraryExists) return;
+
   int client = GetClientOfUserId(event.GetInt("userid"));
   if(IsValidClient(client))
   {
@@ -193,6 +204,8 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 
 public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 {
+  if(!bLibraryExists) return;
+
   for (int i = 1; i <= MaxClients; i++)
   {
     if(IsValidClient(i))
@@ -210,6 +223,8 @@ public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcas
 
 public void OnEntityDestroyed(int entity)
 {
+  if(!bLibraryExists) return;
+
   if(IsValidEdict(entity)) {
     char name[32];
     GetEdictClassname(entity, name, sizeof(name));
@@ -229,7 +244,7 @@ public void OnEntityDestroyed(int entity)
 }
 
 void Heal (int client) {
-  if(IsValidClient(client)) {
+  if(IsValidClient(client) && bLibraryExists) {
     healthshot[client] = -1;
     float clientDMG = SB_GetClientDamage(client);
     clientDMG -= fhealthshot_health;
@@ -261,8 +276,6 @@ public Action SB_OnTakeDamage (int victim, int attacker, int inflictor, float da
 
 public Action SB_OnItemSpawn (const char[] name, float pos[3])
 {
-  if(!bLibraryExists) return;
-
   float newpos[3];
   newpos[0] = pos[0];
   newpos[1] = pos[1];
