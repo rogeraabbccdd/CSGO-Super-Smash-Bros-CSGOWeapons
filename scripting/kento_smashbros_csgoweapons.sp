@@ -71,6 +71,10 @@ public void OnMapStart()
 
   PrecacheModel("models/player/custom_player/legacy/tm_phoenix_heavy.mdl", true);
   PrecacheModel("models/player/custom_player/legacy/ctm_heavy.mdl", true);
+
+  PrecacheSound("survival/parachute_pickup_start_01.wav");
+  PrecacheSound("survival/parachute_pickup_success_01.wav");
+  PrecacheSound("survival/armor_pickup_01.wav");
 }
 
 public void OnConVarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
