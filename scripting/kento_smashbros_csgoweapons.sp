@@ -214,7 +214,11 @@ public Action Event_RoundStart(Event event, const char[] name, bool dontBroadcas
   {
     if(IsValidClient(i))
     {
-      Format(player_default_model[i], sizeof(player_default_model[]), "");
+      if (!StrEqual(player_default_model[i], ""))
+      {
+        SetEntityModel(i, player_default_model[i]);
+        Format(player_default_model[i], sizeof(player_default_model[]), "");
+      }
       has_heavyassaultsuit[i] = false;
       fheavyassaultsuit_armor[i] = 0.0;
       SetEntProp(i, Prop_Send, "m_bHasHelmet", false);
